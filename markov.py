@@ -2,6 +2,8 @@
 
 from random import choice
 
+import sys
+
 
 def open_and_read_file(file_path):
     """Take file path as string; return text as string.
@@ -17,7 +19,7 @@ def open_and_read_file(file_path):
     return text
 
 
-def make_chains(text_string):
+def make_chains(text_string, n=2):
     """Take input text as string; return dictionary of Markov chains.
 
     A chain will be a key that consists of a tuple of (word1, word2)
@@ -37,7 +39,7 @@ def make_chains(text_string):
 
         >>> chains[('hi', 'there')]
         ['mary', 'juanita']
-     
+
         >>> chains[('there','juanita')]
         [None]
     """
@@ -46,57 +48,80 @@ def make_chains(text_string):
 
     words = text_string.split()
 
+    #Adding None at the end of the list for stop flag in make_text funct.
     words.append(None)
 
     index = 0
 
-    while index < (len(words) - 2):
+    while index < (len(words) - n):
 
-        if (words[index], words[index + 1]) in chains:
+        #creates tuple of slice of words list, determined by n.
+        key = tuple(words[index:index + n])
 
-            chains[(words[index], words[index + 1])].append(words[index + 2])
+        if key in chains:
+
+            #adding another value to the key
+            chains[key].append(words[index + n])
 
         else:
 
-            chains[(words[index], words[index + 1])] = [words[index + 2]]
+            #adds key and value to chains dictionary
+            chains[key] = [words[index + n]]
 
         index += 1
 
     return chains
 
 
-def make_text(chains):
+def make_text(chains, n=2):
     """Return text from chains."""
 
-    key = choice(chains.keys())
+    #Selects a random key from chains dictionary
 
-    words = [key[0], key[1]]
+    while True:
+        key = choice(chains.keys())
+
+    #only using key if it starts with a capital letter.
+        if key[0].istitle():
+            break
+
+    words = []
+
+    #Unpacks words from key tuple and adds them to words list
+    for word in key:
+        words.append(word)
 
     while True:
 
+        #Selects random value for specified key
         rand_value = choice(chains[key])
 
         if rand_value is None:
             break
 
         else:
-       
+
+            #Adds word to words list
             words.append(rand_value)
 
-            key = (key[1], rand_value)
+            #Reassigns key to slice of original key, starting at index 1
+            #(through to the end), concatenated with tuple of rand_value
+            key = key[1:] + (rand_value,)
 
     return " ".join(words)
 
 
-input_path = "green-eggs.txt"
+input_path = sys.argv[1]
+
+n = int(sys.argv[2])
 
 # Open the file and turn it into one long string
 input_text = open_and_read_file(input_path)
 
 # Get a Markov chain
-chains = make_chains(input_text)
+chains = make_chains(input_text, n)
 
 # Produce random text
-random_text = make_text(chains)
+random_text = make_text(chains, n)
 
 print random_text
