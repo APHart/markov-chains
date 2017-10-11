@@ -1,4 +1,9 @@
-"""Generate Markov text from text files."""
+"""Generate Markov text from text files.
+
+    format for function call: python markov.py text_file n is_song 
+    where: 
+    n = number of links in markov chain, 
+    is_song = True if song, otherwise defaulted to False"""
 
 from random import choice
 
@@ -111,9 +116,50 @@ def make_text(chains, n=2):
     return " ".join(words)
 
 
+def make_twitter_ready(chains, n=2, is_song=False):
+    """Takes in text, limits to 140 chars, ends with punctuation, returns text """
+
+    #list of punctuation that is acceptable to end the tweet with
+    punctuation = ['.', '?', '!']
+
+    #Producting text
+    text = make_text(chains, n)
+    #Limit the text to 140 chars:
+    text = text[:140]
+
+    #Ensures tweet ends with punctuation:
+    if is_song is False:
+
+        while text[-1] not in punctuation:
+            #if there is no punctuation in the entire 140 chars, make new text.
+            if len(text) == 1:
+                text = make_text(chains, n)
+                text = text[:140]
+
+            #removing the last character if not end of sentence punctuation.
+            else:
+                text = text[:-1]
+
+    else:
+
+        while text[-1] != ' ':
+            #if string does not end with a space, removes last character
+            text = text[:-1]  
+
+    return text
+
+
 input_path = sys.argv[1]
 
 n = int(sys.argv[2])
+
+#check to see if the user types in something for is_song in command line
+try:
+    is_song = sys.argv[3]
+
+#If the user doesn't type in anything, is_song automatically defaulted to False
+except(IndexError):
+    is_song = False
 
 # Open the file and turn it into one long string
 input_text = open_and_read_file(input_path)
@@ -121,7 +167,5 @@ input_text = open_and_read_file(input_path)
 # Get a Markov chain
 chains = make_chains(input_text, n)
 
-# Produce random text
-random_text = make_text(chains, n)
 
-print random_text
+print make_twitter_ready(chains, n, is_song)
